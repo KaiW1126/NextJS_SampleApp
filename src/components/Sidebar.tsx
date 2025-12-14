@@ -1,114 +1,102 @@
 import { currentUser } from "@clerk/nextjs/server";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { SignInButton, SignUpButton } from "@clerk/nextjs";
+import { Button } from "./ui/button";
+import { getUserByClerkId } from "@/actions/user.action";
+import { LinkIcon } from "lucide-react";
 import Link from "next/link";
-import { UserIcon, TrendingUpIcon, UsersIcon } from "lucide-react";
+import { Avatar, AvatarImage } from "./ui/avatar";
+import { Separator } from "./ui/separator";
+import { MapPinIcon } from "lucide-react";
 
 async function Sidebar() {
-  const user = await currentUser();
+    const authUser = await currentUser();
+    if(!authUser) return <UnAuthenticatedSidebar />;
 
-  return (
-    <div className="space-y-4 sticky top-20">
-      {/* User Profile Card */}
-      {user && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm">Profile</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <UserIcon className="w-5 h-5 text-primary" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">
-                  {user.username ?? user.emailAddresses[0].emailAddress.split("@")[0]}
-                </p>
-                <p className="text-xs text-muted-foreground truncate">
-                  {user.emailAddresses[0].emailAddress}
-                </p>
-              </div>
-            </div>
-            <Button variant="outline" size="sm" className="w-full" asChild>
-              <Link href={`/profile/${user.username ?? user.emailAddresses[0].emailAddress.split("@")[0]}`}>
-                View Profile
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Trending Topics */}
+    const user = await getUserByClerkId(authUser.id);
+    if(!user) return null;
+     return (
+    <div className="sticky top-20">
       <Card>
-        <CardHeader>
-          <CardTitle className="text-sm flex items-center gap-2">
-            <TrendingUpIcon className="w-4 h-4" />
-            Trending
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="space-y-2">
-            <div className="hover:bg-accent p-2 rounded-md cursor-pointer transition-colors">
-              <p className="text-sm font-medium">#WebDevelopment</p>
-              <p className="text-xs text-muted-foreground">1,234 posts</p>
-            </div>
-            <div className="hover:bg-accent p-2 rounded-md cursor-pointer transition-colors">
-              <p className="text-sm font-medium">#NextJS</p>
-              <p className="text-xs text-muted-foreground">892 posts</p>
-            </div>
-            <div className="hover:bg-accent p-2 rounded-md cursor-pointer transition-colors">
-              <p className="text-sm font-medium">#React</p>
-              <p className="text-xs text-muted-foreground">756 posts</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+        <CardContent className="pt-6">
+          <div className="flex flex-col items-center text-center">
+            <Link
+              href={`/profile/${user.username}`}
+              className="flex flex-col items-center justify-center"
+            >
+              <Avatar className="w-20 h-20 border-2 ">
+                <AvatarImage src={user.image || "/avatar.png"} />
+              </Avatar>
 
-      {/* Suggested Users */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm flex items-center gap-2">
-            <UsersIcon className="w-4 h-4" />
-            Suggested for you
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="space-y-3">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                    <UserIcon className="w-4 h-4 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">User {i}</p>
-                    <p className="text-xs text-muted-foreground">@user{i}</p>
-                  </div>
+              <div className="mt-4 space-y-1">
+                <h3 className="font-semibold">{user.name}</h3>
+                <p className="text-sm text-muted-foreground">{user.username}</p>
+              </div>
+            </Link>
+
+            {user.bio && <p className="mt-3 text-sm text-muted-foreground">{user.bio}</p>}
+
+            <div className="w-full">
+              <Separator className="my-4" />
+              <div className="flex justify-between">
+                <div>
+                  <p className="font-medium">{user._count.following}</p>
+                  <p className="text-xs text-muted-foreground">Following</p>
                 </div>
-                <Button variant="ghost" size="sm">
-                  Follow
-                </Button>
+                <Separator orientation="vertical" />
+                <div>
+                  <p className="font-medium">{user._count.followers}</p>
+                  <p className="text-xs text-muted-foreground">Followers</p>
+                </div>
               </div>
-            ))}
+              <Separator className="my-4" />
+            </div>
+
+            <div className="w-full space-y-2 text-sm">
+              <div className="flex items-center text-muted-foreground">
+                <MapPinIcon className="w-4 h-4 mr-2" />
+                {user.location || "No location"}
+              </div>
+              <div className="flex items-center text-muted-foreground">
+                <LinkIcon className="w-4 h-4 mr-2 shrink-0" />
+                {user.website ? (
+                  <a href={`${user.website}`} className="hover:underline truncate" target="_blank">
+                    {user.website}
+                  </a>
+                ) : (
+                  "No website"
+                )}
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
-
-      {/* Footer Links */}
-      <div className="text-xs text-muted-foreground space-y-2 px-2">
-        <div className="flex flex-wrap gap-2">
-          <Link href="/about" className="hover:underline">About</Link>
-          <span>·</span>
-          <Link href="/help" className="hover:underline">Help</Link>
-          <span>·</span>
-          <Link href="/privacy" className="hover:underline">Privacy</Link>
-          <span>·</span>
-          <Link href="/terms" className="hover:underline">Terms</Link>
-        </div>
-        <p>© 2024 Socially</p>
-      </div>
     </div>
   );
 }
-
 export default Sidebar;
+
+const UnAuthenticatedSidebar = () => (
+  <div className="sticky top-20">
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-center text-xl font-semibold">Welcome Back!</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-center text-muted-foreground mb-4">
+          Login to access your profile and connect with others.
+        </p>
+        <SignInButton mode="modal">
+          <Button className="w-full" variant="outline">
+            Login
+          </Button>
+        </SignInButton>
+        <SignUpButton mode="modal">
+          <Button className="w-full mt-2" variant="default">
+            Sign Up
+          </Button>
+        </SignUpButton>
+      </CardContent>
+    </Card>
+  </div>
+);

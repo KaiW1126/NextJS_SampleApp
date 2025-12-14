@@ -1,7 +1,6 @@
-import {SignInButton,SignedIn,SignedOut,UserButton} from '@clerk/nextjs'
-import {Button} from '@/components/ui/button'
+import prisma from "@/lib/prisma";
 
-export default function Home() {
+export default async function Home() {
   return (
     <div className="m-4">
       <h1>Home</h1>
