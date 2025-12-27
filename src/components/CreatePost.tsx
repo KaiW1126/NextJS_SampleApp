@@ -20,11 +20,16 @@ export default function CreatePost() {
 
     setIsPosting(true);
     try {
-      // TODO: Implement post creation logic here
-      // const result = await createPost(content, imageUrl);
-      setContent("");
-      setImageUrl("");
-      setShowImageUpload(false);
+      const { createPost } = await import("@/actions/post.action");
+      const result = await createPost(content, imageUrl);
+      
+      if (result?.success) {
+        setContent("");
+        setImageUrl("");
+        setShowImageUpload(false);
+      } else {
+        console.error("Failed to create post:", result?.error);
+      }
     } catch (error) {
       console.error("Failed to create post:", error);
     } finally {
